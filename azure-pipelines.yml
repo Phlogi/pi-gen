@@ -9,7 +9,9 @@ trigger:
 
 variables:
   img_name: f2fsRaspbian
+  # config options for pi-gen
   stage_list: 'stage0 stage1 stage2'
+  rootfs_type: f2fs
   # AGENT_ALLOW_RUNASROOT: 1
   ArtifactFeed: dd4057ba-f9e2-42dd-8396-c97db4e37c84
 

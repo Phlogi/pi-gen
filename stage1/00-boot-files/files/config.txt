@@ -63,3 +63,7 @@ max_framebuffers=2
 
 [all]
 #dtoverlay=vc4-fkms-v3d
+
+# Use initramfs for resizing fs on first boot
+# The line is commented out on purpose after very first boot
+initramfs initrd followkernel

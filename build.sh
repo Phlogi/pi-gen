@@ -154,6 +154,8 @@ export IMG_DATE="${IMG_DATE:-"$(date +%Y-%m-%d)"}"
 export IMG_FILENAME="${IMG_FILENAME:-"${IMG_DATE}-${IMG_NAME}"}"
 export ZIP_FILENAME="${ZIP_FILENAME:-"image_${IMG_DATE}-${IMG_NAME}"}"
 
+export ROOTFS_TYPE="${ROOTFS_TYPE:-"ext4"}"
+
 BASE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 export SCRIPT_DIR="${BASE_DIR}/scripts"
 export WORK_DIR="${WORK_DIR:-"${BASE_DIR}/work/${IMG_DATE}-${IMG_NAME}"}"
