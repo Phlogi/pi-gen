@@ -10,3 +10,4 @@ copy_exec /usr/sbin/resize2fs /usr/bin
 copy_exec /usr/bin/growpart /usr/bin
 copy_exec /usr/sbin/sfdisk /usr/bin
 
+exit 0
