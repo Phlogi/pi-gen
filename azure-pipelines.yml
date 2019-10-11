@@ -47,7 +47,7 @@ steps:
 # example to skip if cache was restored 
 # condition: ne(variables.CACHE_RESTORED, 'true')
 
-- script: sudo apt-get update && sudo apt-get install coreutils quilt parted qemu-user-static debootstrap zerofree zip dosfstools bsdtar libcap2-bin grep rsync xz-utils file git curl
+- script: sudo apt-get update && sudo apt-get install coreutils quilt parted qemu-user-static:i386 debootstrap zerofree zip dosfstools bsdtar libcap2-bin grep rsync xz-utils file git curl
   displayName: Install basic build dependencies
 
 - script: pwd && ls -la && env && ls -la work/*/*/rootfs || true
@@ -117,6 +117,6 @@ steps:
     tagSource: manual
     tag: $(Build.BuildNumber)
     assets: |
-        $(Build.ArtifactStagingDirectory)/*
+        $(Build.ArtifactStagingDirectory)/** # recursive
 #        $(Build.ArtifactStagingDirectory)/*.zip
 #        $(Build.ArtifactStagingDirectory)/*.img
