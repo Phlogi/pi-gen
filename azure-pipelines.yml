@@ -51,7 +51,7 @@ steps:
   displayName: Install basic build dependencies
 
 - script: pwd && ls -la && env && ls -la work/*/*/rootfs || true
-  displayName: [INFO] Check environment and paths
+  displayName: '[INFO] Check environment and paths'
   env: # these are not upper cased, in constrast to variables
     TESTVAR: testvalue
 
@@ -73,15 +73,15 @@ steps:
     mkdir -p deploy/test-date/subfolder/ || true
     touch deploy/test-date/subfolder/test.zip  || true
     echo "some content" >> deploy/test-date/subfolder/test.zip  || true
-  displayName: [TEST] Fake deployment + touching work dir 
+  displayName: '[TEST] Fake deployment + touching work dir'
   continueOnError: true
   condition: false
 
 - script: ls -la deploy/ || true
-  displayName: [INFO] List deploy folder files
+  displayName: '[INFO] List deploy folder files'
 
 - script: ls -la $(System.DefaultWorkingDirectory) && echo $(System.DefaultWorkingDirectory)
-  displayName: [INFO] List working directory
+  displayName: '[INFO] List working directory'
 
 # do not make the publish task below fail, in case only stage0 is built when testing the pipeline
 - script: mkdir deploy || true
