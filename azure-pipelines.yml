@@ -97,15 +97,15 @@ steps:
 - task: CopyFiles@2
   inputs:
     sourceFolder: '$(System.DefaultWorkingDirectory)/deploy'
-    contents: '*' 
+    contents: '**' # recursive
     targetFolder: $(Build.ArtifactStagingDirectory)
     cleanTargetFolder: true
     overWrite: true
-    flattenFolders: true 
+    flattenFolders: false 
     preserveTimestamp: false 
 
 - script: echo $(Build.ArtifactStagingDirectory) && find $(Build.ArtifactStagingDirectory)
-  displayName: List contents of artifact staging directory
+  displayName: '[INFO] List contents of artifact staging directory'
 
 - task: GithubRelease@0
   displayName: 'Create GitHub Release'
@@ -117,6 +117,6 @@ steps:
     tagSource: manual
     tag: $(Build.BuildNumber)
     assets: |
-        *
+        $(Build.ArtifactStagingDirectory)/*
 #        $(Build.ArtifactStagingDirectory)/*.zip
 #        $(Build.ArtifactStagingDirectory)/*.img
