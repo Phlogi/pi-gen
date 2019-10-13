@@ -119,6 +119,7 @@ steps:
     tagSource: manual
     tag: $(Build.BuildNumber)
     assets: |
-        $(Build.ArtifactStagingDirectory)/** # recursive
+        $(Build.ArtifactStagingDirectory)/**
+
 #        $(Build.ArtifactStagingDirectory)/*.zip
 #        $(Build.ArtifactStagingDirectory)/*.img
