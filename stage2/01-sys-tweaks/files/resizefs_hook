@@ -5,9 +5,7 @@ case $1 in
 esac
 . /usr/share/initramfs-tools/hook-functions
 
-copy_exec /usr/sbin/resize.f2fs /usr/bin
-copy_exec /usr/sbin/resize2fs /usr/bin
+copy_exec /sbin/resize.f2fs /usr/bin
+copy_exec /sbin/resize2fs /usr/bin
+copy_exec /sbin/sfdisk /usr/bin
 copy_exec /usr/bin/growpart /usr/bin
-copy_exec /usr/sbin/sfdisk /usr/bin
-
-exit 0
