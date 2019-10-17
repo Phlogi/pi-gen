@@ -44,16 +44,25 @@ ROOT_DEV=$(losetup --show -f -o "${ROOT_OFFSET}" --sizelimit "${ROOT_LENGTH}" "$
 echo "/boot: offset $BOOT_OFFSET, length $BOOT_LENGTH"
 echo "/:     offset $ROOT_OFFSET, length $ROOT_LENGTH"
 
-ROOT_FEATURES="^huge_file"
-for FEATURE in metadata_csum 64bit; do
-	if grep -q "$FEATURE" /etc/mke2fs.conf; then
-	    ROOT_FEATURES="^$FEATURE,$ROOT_FEATURES"
-	fi
-done
-mkdosfs -n boot -F 32 -v "$BOOT_DEV" > /dev/null
-mkfs.ext4 -L rootfs -O "$ROOT_FEATURES" "$ROOT_DEV" > /dev/null
+ROOT_FEATURES=""
+if [ "${ROOTFS_TYPE}" == "ext4" ]; then
+	ROOT_FEATURES="^huge_file"
+	for FEATURE in metadata_csum 64bit; do
+		if grep -q "$FEATURE" /etc/mke2fs.conf; then
+		    ROOT_FEATURES="^$FEATURE,$ROOT_FEATURES"
+		fi
+	done
+fi
 
-mount -v "$ROOT_DEV" "${ROOTFS_DIR}" -t ext4
+mkdosfs -n boot -F 32 -v "$BOOT_DEV" > /dev/null
+
+if [ "${ROOTFS_TYPE}" == "ext4" ]; then
+	mkfs.ext4 -L rootfs -O "$ROOT_FEATURES" "$ROOT_DEV" > /dev/null
+elif [ "${ROOTFS_TYPE}" == "f2fs" ]; then
+	mkfs.f2fs -l rootfs "$ROOT_DEV" > /dev/null
+fi
+
+mount -v "$ROOT_DEV" "${ROOTFS_DIR}" -t "${ROOTFS_TYPE}
 mkdir -p "${ROOTFS_DIR}/boot"
 mount -v "$BOOT_DEV" "${ROOTFS_DIR}/boot" -t vfat
 
