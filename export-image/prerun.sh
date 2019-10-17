@@ -62,7 +62,7 @@ elif [ "${ROOTFS_TYPE}" == "f2fs" ]; then
 	mkfs.f2fs -l rootfs "$ROOT_DEV" > /dev/null
 fi
 
-mount -v "$ROOT_DEV" "${ROOTFS_DIR}" -t "${ROOTFS_TYPE}
+mount -v "$ROOT_DEV" "${ROOTFS_DIR}" -t "${ROOTFS_TYPE}"
 mkdir -p "${ROOTFS_DIR}/boot"
 mount -v "$BOOT_DEV" "${ROOTFS_DIR}/boot" -t vfat
 
