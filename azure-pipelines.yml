@@ -12,8 +12,6 @@ variables:
   # config options for pi-gen
   stage_list: 'stage0 stage1 stage2'
   rootfs_type: f2fs
-  # AGENT_ALLOW_RUNASROOT: 1
-  ArtifactFeed: dd4057ba-f9e2-42dd-8396-c97db4e37c84
 
 pool:
   vmImage: 'ubuntu-18.04' # avoids tons of: 'qemu: Unsupported syscall: 383' error messages)
@@ -49,8 +47,10 @@ steps:
 # example to skip if cache was restored 
 # condition: ne(variables.CACHE_RESTORED, 'true')
 
-- script: sudo dpkg --add-architecture i386 && sudo apt-get update && sudo apt-get remove -y --purge man-db && sudo apt-get install coreutils quilt parted qemu-user-static:i386 debootstrap zerofree zip dosfstools bsdtar libcap2-bin grep rsync xz-utils file git curl f2fs-tools && sudo apt-get install -y linux-modules-extra-5.0.0-1020-azure && sudo modprobe -v f2fs 
-  displayName: Install basic build dependencies
+- script: |
+    kversion=$(uname -r)
+    sudo dpkg --add-architecture i386 && sudo apt-get update && sudo apt-get remove -y --purge man-db && sudo apt-get install coreutils quilt parted qemu-user-static:i386 debootstrap zerofree zip dosfstools bsdtar libcap2-bin grep rsync xz-utils file git curl f2fs-tools && sudo apt-get install -y linux-modules-extra-$kversion-azure && sudo modprobe -v f2fs 
+  displayName: Install basic build dependencies and f2fs module based on kernel version
 
 - script: pwd && ls -la && env && ls -la work/*/*/rootfs || true
   displayName: '[INFO] Check environment and paths'
