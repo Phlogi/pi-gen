@@ -1,0 +1,50 @@
+#!/bin/sh
+
+set -e
+
+case "${1}" in
+        prereqs)
+                exit 0
+                ;;
+esac
+
+. /scripts/functions
+log_begin_msg "Partition and filesystem resizing..."
+
+# Disable initrd in boot config
+# We only want to try resizing the partition once
+mkdir /boot
+mount /dev/disk/by-label/boot /boot
+/usr/bin/sed -i 's/^initramfs /#initramfs /' /boot/config.txt
+umount /boot
+
+# getting from labeled partition to the block device
+p=$(basename "$(readlink -f /dev/disk/by-label/rootfs)")
+d=$(basename "$(readlink -f "/sys/class/block/"${p}"/..")")
+pn=$(cat "/sys/class/block/"${p}"/partition")
+
+echo $p && echo $d && echo $pn
+
+/usr/bin/growpart /dev/"${d}" "${pn}"
+
+# Wait for the partition re-read events to complete
+# so that the root partition is available when we try and mount it.
+
+udevadm settle --timeout ${ROOTDELAY:-30}
+
+case "${ROOTFSTYPE}" in
+        f2fs)
+                /usr/bin/resize.f2fs /dev/disk/by-label/rootfs && log_success_msg "Resized f2fs root filesystem successfully"
+                ;;
+        ext4)
+                /usr/bin/resize2fs /dev/disk/by-label/rootfs && log_success_msg "Resized ext4 root filesystem successfully"
+                ;;
+esac
+
+log_end_msg "Partition and filesystem resizing finished. Rebooting in 3s."
+
+#sleep3 
+#echo b >/proc/sysrq-trigger 
+
+exit 0
+

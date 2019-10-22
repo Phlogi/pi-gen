@@ -80,7 +80,9 @@ cp "$ROOTFS_DIR/etc/rpi-issue" "$INFO_FILE"
 ROOT_DEV="$(mount | grep "${ROOTFS_DIR} " | cut -f1 -d' ')"
 
 unmount "${ROOTFS_DIR}"
-zerofree "${ROOT_DEV}"
+if [ "${ROOTFS_TYPE}" == "ext4" ]; then
+	zerofree "${ROOT_DEV}"
+fi
 
 unmount_image "${IMG_FILE}"
 

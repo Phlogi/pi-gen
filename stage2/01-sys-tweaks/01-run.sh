@@ -1,7 +1,5 @@
 #!/bin/bash -e
 
-install -m 755 files/resize2fs_once	"${ROOTFS_DIR}/etc/init.d/"
-
 install -d				"${ROOTFS_DIR}/etc/systemd/system/rc-local.service.d"
 install -m 644 files/ttyoutput.conf	"${ROOTFS_DIR}/etc/systemd/system/rc-local.service.d/"
 
@@ -10,6 +8,9 @@ install -m 644 files/50raspi		"${ROOTFS_DIR}/etc/apt/apt.conf.d/"
 install -m 644 files/console-setup   	"${ROOTFS_DIR}/etc/default/"
 
 install -m 755 files/rc.local		"${ROOTFS_DIR}/etc/"
+
+install -m 755 files/resizefs_hook	"${ROOTFS_DIR}/etc/initramfs-tools/hooks/"
+install -m 755 files/resizefs_premount  "${ROOTFS_DIR}/etc/initramfs-tools/scripts/local-premount/"
 
 on_chroot << EOF
 systemctl disable hwclock.sh
@@ -27,13 +28,13 @@ if [ "${USE_QEMU}" = "1" ]; then
 	echo "enter QEMU mode"
 	install -m 644 files/90-qemu.rules "${ROOTFS_DIR}/etc/udev/rules.d/"
 	on_chroot << EOF
-systemctl disable resize2fs_once
+echo "TEST for disabling initramfs / resize"
+ls -la /boot
+mount
+sed -i 's/^initramfs /#initramfs /' /boot/config.txt
+cat /boot/config.txt
 EOF
 	echo "leaving QEMU mode"
-else
-	on_chroot << EOF
-systemctl enable resize2fs_once
-EOF
 fi
 
 on_chroot <<EOF
@@ -51,6 +52,15 @@ EOF
 
 on_chroot << EOF
 usermod --pass='*' root
+EOF
+
+on_chroot << EOF
+# checks
+ls -la /etc/initramfs-tools/hooks/
+ls -la /etc/initramfs-tools/scripts/local-premount/
+mkinitramfs -o /boot/initrd
+ls -la /boot/initrd
+lsinitramfs /boot/initrd
 EOF
 
 rm -f "${ROOTFS_DIR}/etc/ssh/"ssh_host_*_key*

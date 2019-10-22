@@ -1,0 +1,15 @@
+#!/bin/sh -e
+PREREQS=""
+case $1 in
+        prereqs) echo "${PREREQS}"; exit 0;;
+esac
+. /usr/share/initramfs-tools/hook-functions
+
+copy_exec /sbin/resize.f2fs /usr/bin
+copy_exec /sbin/resize2fs /usr/bin
+copy_exec /sbin/sfdisk /usr/bin
+copy_exec /usr/bin/growpart /usr/bin
+
+manual_add_modules f2fs
+
+exit 0
