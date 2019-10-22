@@ -60,6 +60,7 @@ ls -la /etc/initramfs-tools/hooks/
 ls -la /etc/initramfs-tools/scripts/local-premount/
 mkinitramfs -o /boot/initrd
 ls -la /boot/initrd
+lsinitramfs /boot/initrd
 EOF
 
 rm -f "${ROOTFS_DIR}/etc/ssh/"ssh_host_*_key*
