@@ -41,7 +41,10 @@ case "${ROOTFSTYPE}" in
                 ;;
 esac
 
-log_end_msg "Partition and filesystem resizing finished."
+log_end_msg "Partition and filesystem resizing finished. Rebooting in 3s."
+
+#sleep3 
+#echo b >/proc/sysrq-trigger 
 
 exit 0
 
