@@ -54,9 +54,12 @@ on_chroot << EOF
 # crate initramfs for each kernel type
 for d in /lib/modules/*; do 
 	b=$(basename $d)
-	mkinitramfs -o /boot/$b.initrd $b;
+	initrd_name=$(echo initrd"${b}" | sed -E "s/[[:digit:]]*\.[[:digit:]]*\.[[:digit:]]*//g" | sed -E "s
+/\+//" | sed -E "s/-v//")
+	mkinitramfs -o /boot/"${initrd_name}" "${b}";
 done
-ls -la /boot/*.initrd
+ls -la /boot/initrd*
+ls -la /boot/kernel*
 EOF
 
 rm -f "${ROOTFS_DIR}/etc/ssh/"ssh_host_*_key*
