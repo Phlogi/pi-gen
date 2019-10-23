@@ -50,16 +50,17 @@ on_chroot << EOF
 usermod --pass='*' root
 EOF
 
-on_chroot << EOF
 # crate initramfs for each kernel type
-for d in /lib/modules/*; do 
-	if [[ ! -e "${d}" ]]; then continue; fi
-	b=$(basename "${d}")
-	initrd_name=$(echo initrd"${b}" | sed -E "s/[[:digit:]]*\.[[:digit:]]*\.[[:digit:]]*//g" | sed -E "s/\+//" | sed -E "s/-v//")
-	mkinitramfs -o /boot/"${initrd_name}" "${b}";
-done
-ls -la /boot/initrd*
-ls -la /boot/kernel*
+echo "Building initramfs..."
+for modules_dir in $(find ${ROOTFS_DIR}/lib/modules/ -mindepth 1 -maxdepth 1 -type d); do
+	modules_name=$(basename "${modules_dir}")
+	initrd_name=$(echo initrd"${modules_name}" | sed -E "s/[[:digit:]]*\.[[:digit:]]*\.[[:digit:]]*//g" | sed -E "s/\+//" | sed -E "s/-v//")
+on_chroot << EOF
+mkinitramfs -o /boot/"${initrd_name}" "${modules_name}";
 EOF
+done
+
+ls -l ${ROOTFS_DIR}/boot/initrd*
+ls -l ${ROOTFS_DIR}/boot/kernel*
 
 rm -f "${ROOTFS_DIR}/etc/ssh/"ssh_host_*_key*
