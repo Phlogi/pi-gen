@@ -53,9 +53,9 @@ EOF
 on_chroot << EOF
 # crate initramfs for each kernel type
 for d in /lib/modules/*; do 
-	b=$(basename $d)
-	initrd_name=$(echo initrd"${b}" | sed -E "s/[[:digit:]]*\.[[:digit:]]*\.[[:digit:]]*//g" | sed -E "s
-/\+//" | sed -E "s/-v//")
+	if [[ ! -e "${d}" ]]; then continue; fi
+	b=$(basename "${d}")
+	initrd_name=$(echo initrd"${b}" | sed -E "s/[[:digit:]]*\.[[:digit:]]*\.[[:digit:]]*//g" | sed -E "s/\+//" | sed -E "s/-v//")
 	mkinitramfs -o /boot/"${initrd_name}" "${b}";
 done
 ls -la /boot/initrd*
