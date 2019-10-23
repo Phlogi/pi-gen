@@ -1,4 +1,5 @@
 01-useradd.diff
 02-swap.diff
+03-dphys-swapfile.diff
 04-inputrc.diff
 05-path.diff

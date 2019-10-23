@@ -1,0 +1,20 @@
+--- /sbin/dphys-swapfile	2018-08-23 23:29:41.000000000 +0200
++++ /sbin/dphys-swapfile.new	2019-10-22 07:34:32.656273926 +0200
+@@ -1,4 +1,4 @@
+-#! /bin/sh
++#/w! /bin/sh
+ # /sbin/dphys-swapfile - automatically set up an swapfile
+ # author Neil Franklin, last modification 2010.05.05
+ # This script is copyright ETH Zuerich Physics Departement,
+@@ -145,8 +145,9 @@
+       mv /etc/.fstab /etc/fstab
+
+       # use fallocate if found to create swapfile, else use dd
+-      type fallocate > /dev/null
+-      if [ $? -eq 0 ]; then
++      # avoid fallocate on f2fs file system
++      fs_type=$( stat -c %T -f $(dirname "${CONF_SWAPFILE}") )
++      if [ hash fallocate 2>/dev/null && "${fs_type}" != "f2fs"  ] ; then
+         fallocate -l "${CONF_SWAPSIZE}"M "${CONF_SWAPFILE}" 2> /dev/null
+       else
+         dd if=/dev/zero of="${CONF_SWAPFILE}" bs=1048576 \
