@@ -26,100 +26,96 @@ pool:
 #        sh -c "apt-get update && DEBIAN_FRONTEND=noninteractive apt-get -o Dpkg::Options::="--force-confold" -y install sudo"
 #      displayName: Set up sudo
 
-steps:
+jobs:
+  - job: buildimage
+    timeoutInMinutes: 360
+    displayName: Build raspbian image and publish as github release
 
-- task: PowerShell@2
-  displayName: Set date time stamp variable
-  inputs:
-    targetType: 'inline'
-    script: |
-      $Time = Get-Date
-      $Time = $Time.ToUniversalTime()
-      $date = $Time.ToString("yyyy-MM-dd HH:mmK")
-      Write-Host "##vso[task.setvariable variable=datetimestamp]$date"
-    errorActionPreference: 'continue'
+    steps:
+    - task: PowerShell@2
+      displayName: Set date time stamp variable
+      inputs:
+        targetType: 'inline'
+        script: |
+          $Time = Get-Date
+          $Time = $Time.ToUniversalTime()
+          $date = $Time.ToString("yyyy-MM-dd HH:mmK")
+          Write-Host "##vso[task.setvariable variable=datetimestamp]$date"
+        errorActionPreference: 'continue'
 
-# - task: CacheBeta@0
-#  inputs:
-#    key: '$(System.DefaultWorkingDirectory)/stage*/**'
-#     path: '$(System.DefaultWorkingDirectory)/work, !**var/lock, !**rootfs/root'
-#    cacheHitVar: CACHE_RESTORED
-# example to skip if cache was restored 
-# condition: ne(variables.CACHE_RESTORED, 'true')
+    - script: |
+        kversion=$(uname -r)
+        sudo dpkg --add-architecture i386 && sudo apt-get update && sudo apt-get remove -y --purge man-db && sudo apt-get install coreutils quilt parted qemu-user-static:i386 debootstrap zerofree zip dosfstools bsdtar libcap2-bin grep rsync xz-utils file git curl f2fs-tools && sudo apt-get install -y linux-modules-extra-$kversion && sudo modprobe -v f2fs 
+      displayName: Install basic build dependencies and f2fs module based on kernel version
 
-- script: |
-    kversion=$(uname -r)
-    sudo dpkg --add-architecture i386 && sudo apt-get update && sudo apt-get remove -y --purge man-db && sudo apt-get install coreutils quilt parted qemu-user-static:i386 debootstrap zerofree zip dosfstools bsdtar libcap2-bin grep rsync xz-utils file git curl f2fs-tools && sudo apt-get install -y linux-modules-extra-$kversion && sudo modprobe -v f2fs 
-  displayName: Install basic build dependencies and f2fs module based on kernel version
+    - script: pwd && ls -la && env && ls -la work/*/*/rootfs || true
+      displayName: '[INFO] Check environment and paths'
+      env: # these are not upper cased, in constrast to variables
+        TESTVAR: testvalue
 
-- script: pwd && ls -la && env && ls -la work/*/*/rootfs || true
-  displayName: '[INFO] Check environment and paths'
-  env: # these are not upper cased, in constrast to variables
-    TESTVAR: testvalue
+    # MAIN Script call to build all specified stage in stage_list
+    - script: sudo -E ./build.sh
+      displayName: Main Build (build.sh)
 
-# MAIN Script call to build all specified stage in stage_list
-- script: sudo -E ./build.sh
-  displayName: Main Build (build.sh)
+    # alternative for container based  build
+    # - script: PRESERVE_CONTAINER=1 ./build-docker.sh
 
-# alternative for container based  build
-# - script: PRESERVE_CONTAINER=1 ./build-docker.sh
+    - script: |
+        pwd
+        mkdir -p work/x/y/rootfs || true
+        sudo mkdir work/x/y/rootfs/root || true
+        sudo chmod 700 work/x/y/rootfs/root || true
+        ls -la work/x/y/rootfs/root || true
+        sudo ls -la work/x/y/rootfs/root || true
+        touch work/_dirty  || true
+        mkdir -p deploy/test-date/subfolder/ || true
+        touch deploy/test-date/subfolder/test.zip  || true
+        echo "some content" >> deploy/test-date/subfolder/test.zip  || true
+      displayName: '[TEST] Fake deployment + touching work dir'
+      continueOnError: true
+      condition: false
 
-- script: |
-    pwd
-    mkdir -p work/x/y/rootfs || true
-    sudo mkdir work/x/y/rootfs/root || true
-    sudo chmod 700 work/x/y/rootfs/root || true
-    ls -la work/x/y/rootfs/root || true
-    sudo ls -la work/x/y/rootfs/root || true
-    touch work/_dirty  || true
-    mkdir -p deploy/test-date/subfolder/ || true
-    touch deploy/test-date/subfolder/test.zip  || true
-    echo "some content" >> deploy/test-date/subfolder/test.zip  || true
-  displayName: '[TEST] Fake deployment + touching work dir'
-  continueOnError: true
-  condition: false
+    - script: ls -la deploy/ || true
+      displayName: '[INFO] List deploy folder files'
 
-- script: ls -la deploy/ || true
-  displayName: '[INFO] List deploy folder files'
+    - script: ls -la $(System.DefaultWorkingDirectory) && echo $(System.DefaultWorkingDirectory)
+      displayName: '[INFO] List working directory'
 
-- script: ls -la $(System.DefaultWorkingDirectory) && echo $(System.DefaultWorkingDirectory)
-  displayName: '[INFO] List working directory'
+    # do not make the publish task below fail, in case only stage0 is built when testing the pipeline
+    - script: mkdir deploy || true
+      displayName: Ensure deploy directory exists. 
 
-# do not make the publish task below fail, in case only stage0 is built when testing the pipeline
-- script: mkdir deploy || true
-  displayName: Ensure deploy directory exists. 
+    - publish: '$(System.DefaultWorkingDirectory)/deploy'
+      displayName: 'Publish artifact: images from deploy folder'
+      artifact: deployable-images
 
-- publish: '$(System.DefaultWorkingDirectory)/deploy'
-  displayName: 'Publish artifact: images from deploy folder'
-  artifact: deployable-images
+    - script: find $(System.DefaultWorkingDirectory)/deploy || true
+      displayName: '[INFO] List contents of deploy dir'
 
-- script: find $(System.DefaultWorkingDirectory)/deploy || true
-  displayName: '[INFO] List contents of deploy dir'
+    - task: CopyFiles@2
+      inputs:
+        sourceFolder: '$(System.DefaultWorkingDirectory)/deploy'
+        contents: '**' # recursive
+        targetFolder: $(Build.ArtifactStagingDirectory)
+        cleanTargetFolder: true
+        overWrite: true
+        flattenFolders: false 
+        preserveTimestamp: false 
 
-- task: CopyFiles@2
-  inputs:
-    sourceFolder: '$(System.DefaultWorkingDirectory)/deploy'
-    contents: '**' # recursive
-    targetFolder: $(Build.ArtifactStagingDirectory)
-    cleanTargetFolder: true
-    overWrite: true
-    flattenFolders: false 
-    preserveTimestamp: false 
+    - script: echo $(Build.ArtifactStagingDirectory) && find $(Build.ArtifactStagingDirectory)
+      displayName: '[INFO] List contents of artifact staging directory'
 
-- script: echo $(Build.ArtifactStagingDirectory) && find $(Build.ArtifactStagingDirectory)
-  displayName: '[INFO] List contents of artifact staging directory'
+    - task: GithubRelease@0
+      displayName: 'Create GitHub Release'
+      inputs:
+        isDraft: true
+        title: 'Raspbian image with f2fs filesystem ($(datetimestamp))'
+        gitHubConnection: phlogi-personal
+        repositoryName: phlogi/pi-gen
+        tagSource: manual
+        tag: $(Build.BuildNumber)
+        assets: |
+            $(Build.ArtifactStagingDirectory)/**
 
-- task: GithubRelease@0
-  displayName: 'Create GitHub Release'
-  inputs:
-    isDraft: true
-    title: 'Raspbian image with f2fs filesystem ($(datetimestamp))'
-    gitHubConnection: phlogi-personal
-    repositoryName: phlogi/pi-gen
-    tagSource: manual
-    tag: $(Build.BuildNumber)
-    assets: |
-        $(Build.ArtifactStagingDirectory)/**
-
-#        $(Build.ArtifactStagingDirectory)/*.zip
-#        $(Build.ArtifactStagingDirectory)/*.img
+    #        $(Build.ArtifactStagingDirectory)/*.zip
+    #        $(Build.ArtifactStagingDirectory)/*.img
