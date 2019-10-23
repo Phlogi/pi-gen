@@ -28,11 +28,7 @@ if [ "${USE_QEMU}" = "1" ]; then
 	echo "enter QEMU mode"
 	install -m 644 files/90-qemu.rules "${ROOTFS_DIR}/etc/udev/rules.d/"
 	on_chroot << EOF
-echo "TEST for disabling initramfs / resize"
-ls -la /boot
-mount
 sed -i 's/^initramfs /#initramfs /' /boot/config.txt
-cat /boot/config.txt
 EOF
 	echo "leaving QEMU mode"
 fi
@@ -55,12 +51,12 @@ usermod --pass='*' root
 EOF
 
 on_chroot << EOF
-# checks
-ls -la /etc/initramfs-tools/hooks/
-ls -la /etc/initramfs-tools/scripts/local-premount/
-mkinitramfs -o /boot/initrd
-ls -la /boot/initrd
-lsinitramfs /boot/initrd
+# crate initramfs for each kernel type
+for d in /lib/modules/*; do 
+	b=$(basename $d)
+	mkinitramfs -o /boot/$b.initrd $b;
+done
+ls -la /boot/*.initrd
 EOF
 
 rm -f "${ROOTFS_DIR}/etc/ssh/"ssh_host_*_key*
