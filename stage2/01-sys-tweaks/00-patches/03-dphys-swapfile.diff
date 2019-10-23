@@ -1,11 +1,7 @@
---- /sbin/dphys-swapfile	2018-08-23 23:29:41.000000000 +0200
-+++ /sbin/dphys-swapfile.new	2019-10-22 07:34:32.656273926 +0200
-@@ -1,4 +1,4 @@
--#! /bin/sh
-+#/w! /bin/sh
- # /sbin/dphys-swapfile - automatically set up an swapfile
- # author Neil Franklin, last modification 2010.05.05
- # This script is copyright ETH Zuerich Physics Departement,
+Index: buster-stage2/rootfs/sbin/dphys-swapfile
+===================================================================
+--- buster-stage2.orig/rootfs/sbin/dphys-swapfile	2018-08-23 23:29:41.000000000 +0200
++++ buster-stage2.orig/rootfs/sbin/dphys-swapfile	2019-10-22 07:34:32.656273926 +0200
 @@ -145,8 +145,9 @@
        mv /etc/.fstab /etc/fstab
 
