@@ -10,6 +10,4 @@ copy_exec /sbin/resize2fs /usr/bin
 copy_exec /sbin/sfdisk /usr/bin
 copy_exec /usr/bin/growpart /usr/bin
 
-manual_add_modules f2fs
-
 exit 0
