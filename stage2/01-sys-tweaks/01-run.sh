@@ -50,14 +50,26 @@ on_chroot << EOF
 usermod --pass='*' root
 EOF
 
+# reduce initramfs functions
+rm "${ROOTFS_DIR}"/usr/share/initramfs-tools/scripts/local-bottom/ntfs_3g
+rm "${ROOTFS_DIR}"/usr/share/initramfs-tools/scripts/local-premount/ntfs_3g
+rm "${ROOTFS_DIR}"/usr/share/initramfs-tools/scripts/local-premount/resume
+rm "${ROOTFS_DIR}"/usr/share/initramfs-tools/hooks/fuse
+rm "${ROOTFS_DIR}"/usr/share/initramfs-tools/hooks/ntfs_3g
+rm "${ROOTFS_DIR}"/usr/share/initramfs-tools/hooks/resume
+
+sed -i 's/^update_initramfs=yes/update_initramfs=no/' /etc/initramfs-tools/update-initramfs.conf
+
 # crate initramfs for each kernel type
 echo "Building initramfs..."
 for modules_dir in $(find ${ROOTFS_DIR}/lib/modules/ -mindepth 1 -maxdepth 1 -type d); do
 	modules_name=$(basename "${modules_dir}")
 	initrd_name=$(echo initrd"${modules_name}" | sed -E "s/[[:digit:]]*\.[[:digit:]]*\.[[:digit:]]*//g" | sed -E "s/\+//" | sed -E "s/-v//")
+
 on_chroot << EOF
 mkinitramfs -o /boot/"${initrd_name}" "${modules_name}";
 EOF
+
 done
 
 ls -l ${ROOTFS_DIR}/boot/initrd*
