@@ -23,7 +23,13 @@ p=$(basename "$(readlink -f /dev/disk/by-label/rootfs)")
 d=$(basename "$(readlink -f "/sys/class/block/"${p}"/..")")
 pn=$(cat "/sys/class/block/"${p}"/partition")
 
-echo $p && echo $d && echo $pn
+echo "rootfs partition details:"
+echo "p: ${p} | device: ${d} | part-nr: ${pn}"
+
+ORIG_PARTID=$(blkid -s PARTUUID -o value | head -c 8) 
+echo "current PARTUUID: ${ORIG_PARTID}"
+
+echo "Resizing partition, please wait..."
 
 /usr/bin/growpart /dev/"${d}" "${pn}"
 
@@ -31,6 +37,10 @@ echo $p && echo $d && echo $pn
 # so that the root partition is available when we try and mount it.
 
 udevadm settle --timeout ${ROOTDELAY:-30}
+
+echo "Resizing filesystem, please be patient, this can take a long time..."
+echo "Do NOT turn off power. "
+sleep 3
 
 case "${ROOTFSTYPE}" in
         f2fs)
@@ -41,10 +51,28 @@ case "${ROOTFSTYPE}" in
                 ;;
 esac
 
-log_end_msg "Partition and filesystem resizing finished. Rebooting in 3s."
+# PARTUUID cahnges after resize, at least for f2fs, update in configs needed
+NEW_PARTID=$(blkid -s PARTUUID -o value | head -c 8) 
+echo "New PARTUUID: ${NEW_PARTID}"
 
-#sleep3 
-#echo b >/proc/sysrq-trigger 
+if [ "${NEW_PARTID}" != "${ORIG_PARTID}" ]; then
+    echo "PARTUUID has changed, updating boot and fstab settings"
+	mkdir /rootfs
+	mount /dev/disk/by-label/rootfs /rootfs
+	mount /dev/disk/by-label/boot /boot
+	
+	sed -i "s|PARTUUID=[[:alnum:]]\+|PARTUUID=${NEW_PARTID}|" /rootfs/etc/fstab
+	sed -i "s|PARTUUID=[[:alnum:]]\+|PARTUUID=${NEW_PARTID}|" /boot/cmdline.txt
+
+	umount /boot
+	umount /rootfs
+fi
+
+log_end_msg "Partition and filesystem resizing finished. Rebooting the system in 3s..."
+
+sleep 3
+
+echo b > /proc/sysrq-trigger
 
 exit 0
 
