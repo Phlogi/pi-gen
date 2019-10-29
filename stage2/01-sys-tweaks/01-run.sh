@@ -58,7 +58,7 @@ rm "${ROOTFS_DIR}"/usr/share/initramfs-tools/hooks/fuse
 rm "${ROOTFS_DIR}"/usr/share/initramfs-tools/hooks/ntfs_3g
 rm "${ROOTFS_DIR}"/usr/share/initramfs-tools/hooks/resume
 
-#sed -i 's/^update_initramfs=yes/update_initramfs=no/' /etc/initramfs-tools/update-initramfs.conf
+sed -i 's/^update_initramfs=yes/update_initramfs=no/' "${ROOTFS_DIR}"/etc/initramfs-tools/update-initramfs.conf
 
 # crate initramfs for each kernel type
 echo "Building initramfs..."
